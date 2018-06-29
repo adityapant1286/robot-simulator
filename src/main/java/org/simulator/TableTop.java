@@ -3,6 +3,8 @@ package org.simulator;
 import org.simulator.entities.Position;
 import org.simulator.entities.Robot;
 
+import static java.util.Objects.isNull;
+
 /**
  * A 5 x 5 fixed dimensions table.
  * On this platform we can place Robot at any position and direction.
@@ -23,10 +25,10 @@ public class TableTop {
         this.robot = robot;
     }
 
-    public static boolean isRobotFalling(Position position) {
-        return position.getX() > COLS // falling at right side of the table
+    public boolean isRobotFalling(Position position) {
+        return position.getX() > (COLS - 1) // falling at right side of the table
                 || position.getX() < 0 // falling at the left side of the table
-                || position.getY() > ROWS // falling at the bottom side of the table
+                || position.getY() > (ROWS - 1) // falling at the bottom side of the table
                 || position.getY() < 0; // falling at the top side of the table
     }
 
@@ -51,6 +53,9 @@ public class TableTop {
      */
     public void execute(Commands command) {
 
+        if (isNull(robot.getPosition()))
+            throw new UnsupportedOperationException("Robot is not placed yet");
+
         switch (command) {
 
             case MOVE: Position nextPosition = robot.getPosition().next();
@@ -74,6 +79,6 @@ public class TableTop {
      */
     public String stats() {
         final Position robotPosition = robot.getPosition();
-        return String.format("%d, %d, %s", robotPosition.getX(), robotPosition.getY(), robotPosition.getDirection().name());
+        return String.format("%d,%d,%s", robotPosition.getX(), robotPosition.getY(), robotPosition.getDirection().name());
     }
 }

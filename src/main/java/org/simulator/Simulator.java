@@ -6,6 +6,8 @@ import org.simulator.entities.Robot;
 
 import java.util.Scanner;
 
+import static java.util.Objects.isNull;
+
 public class Simulator {
 
 
@@ -15,10 +17,8 @@ public class Simulator {
     }
 
     private void startSimulation() {
-        final Scanner sc = new Scanner(System.in);
 
-        try {
-
+        try (Scanner sc = new Scanner(System.in)) { // auto closable
 
             boolean placed = false;
 
@@ -27,52 +27,59 @@ public class Simulator {
 
             System.out.println("Robot Simulator");
             System.out.println("Enter a command, Valid commands are:");
-            System.out.println("\'PLACE X,Y,NORTH|SOUTH|EAST|WEST\', MOVE, LEFT, RIGHT, REPORT or EXIT\n");
+            System.out.println("\'PLACE X,Y,NORTH|SOUTH|EAST|WEST\', MOVE, LEFT, RIGHT, REPORT or EXIT");
 
             while (true) {
 
-                String input = sc.nextLine().trim().toUpperCase();
+                final String input = sc.nextLine().trim().toUpperCase(); // read user input
 
                 // Exit the program
-                if (Commands.EXIT.name().equals(input))
+                if (Commands.EXIT.name().equals(input)) // exit the loop and program
                     break;
 
-                String[] arg = input.split(" ");
+                final String[] arg = input.split(" ");
 
-                Commands command;
-                try {
-
-                    command = Commands.valueOf(arg[0]);
-
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Invalid command. Try again.");
+                Commands command = identifyCommand(arg[0]);
+                if (isNull(command)) // continue on invalid command
                     continue;
-                }
 
+                // place the Robot on the table
                 if (Commands.PLACE.equals(command) && arg.length == 2) {
 
                     placed = placeOnTable(arg[1], tableTop);
 
-                } else if (placed) {
+                } else if (placed) { // execute commands only if Robot is placed on the table
 
-                    if (Commands.REPORT.equals(command))
+                    if (Commands.REPORT.equals(command)) // report
                         System.out.println(String.format("Output: %s", tableTop.stats()));
                     else
                         tableTop.execute(command);
                 }
             } // while loop
 
-        } finally {
-            sc.close();
+        } // try
+    }
+
+    private Commands identifyCommand(String cmd) {
+
+        Commands command = null;
+        try {
+
+            command = Commands.valueOf(cmd); // get command from input
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid command. Try again.");
         }
+
+        return command;
     }
 
     private static boolean placeOnTable(final String input, final TableTop tableTop) {
 
         final String[] params = input.split(",");
-        int x = 0;
-        int y = 0;
-        Direction direction = null;
+        int x;
+        int y;
+        Direction direction;
 
         try {
             x = Integer.valueOf(params[0].trim());
